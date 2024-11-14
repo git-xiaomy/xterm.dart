@@ -8,6 +8,8 @@ import 'package:xterm/src/ui/gesture/gesture_detector.dart';
 import 'package:xterm/src/ui/pointer_input.dart';
 import 'package:xterm/src/ui/render.dart';
 
+import '../../../core.dart';
+
 class TerminalGestureHandler extends StatefulWidget {
   const TerminalGestureHandler({
     super.key,
@@ -76,6 +78,7 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
       onDragStart: onDragStart,
       onDragUpdate: onDragUpdate,
       onDoubleTapDown: onDoubleTapDown,
+      onDragEnd: onDragEnd,
     );
   }
 
@@ -166,6 +169,7 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
   }
 
   void onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
+    print('11111');
     renderTerminal.selectWord(
       _lastLongPressStartDetails!.localPosition,
       details.localPosition,
@@ -174,18 +178,37 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
 
   // void onLongPressUp() {}
 
-  void onDragStart(DragStartDetails details) {
-    _lastDragStartDetails = details;
+  BufferRangeLine? _selectedRange;
+  late CellOffset _initialCellOffset;
 
-    details.kind == PointerDeviceKind.mouse
-        ? renderTerminal.selectCharacters(details.localPosition)
-        : renderTerminal.selectWord(details.localPosition);
+  void onDragStart(DragStartDetails details) {
+    // 获取初始拖动位置并设置初始选区
+    _initialCellOffset = renderTerminal.getCellOffset(details.localPosition);
+    _selectedRange = BufferRangeLine.collapsed(_initialCellOffset);
   }
 
   void onDragUpdate(DragUpdateDetails details) {
-    renderTerminal.selectCharacters(
-      _lastDragStartDetails!.localPosition,
-      details.localPosition,
-    );
+    // 获取当前拖动位置
+    final currentOffset = renderTerminal.getCellOffset(details.localPosition);
+
+    // 根据拖动方向动态调整选区的起始和结束位置
+    if (currentOffset.x < _initialCellOffset.x || currentOffset.y < _initialCellOffset.y) {
+      // 从右下往左上拖动时，将当前光标位置设为选区开始
+      _selectedRange = BufferRangeLine(currentOffset, _initialCellOffset);
+    } else {
+      // 从左上往右下拖动时，将初始位置设为选区开始
+      _selectedRange = BufferRangeLine(_initialCellOffset, currentOffset);
+    }
+
+    // 更新选区显示
+    renderTerminal.selectCharacters(_selectedRange!.begin, _selectedRange!.end);
+
+    // 自动滚动
+    terminalView.autoScrollDown(details);
+  }
+
+  void onDragEnd(DragEndDetails details) {
+    // 清空选区状态
+    _selectedRange = null;
   }
 }

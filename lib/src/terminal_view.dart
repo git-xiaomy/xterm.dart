@@ -444,6 +444,61 @@ class TerminalViewState extends State<TerminalView> {
       position.jumpTo(position.maxScrollExtent);
     }
   }
+
+  // 滚动操作的缓冲阈值，避免频繁的滚动触发
+  int _lastScrollTime = 0;  // 用于记录最后一次滚动的时间戳
+  final int _scrollDebounceInterval = 100;  // 100ms为最小滚动间隔
+
+  void autoScrollDown(DragUpdateDetails details) {
+    final scrollThreshold = renderTerminal.lineHeight * 7;
+    final position = _scrollableKey.currentState?.position;
+    if (position == null) return;
+
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+    // 判断是否已经过了缓冲时间
+    if (currentTime - _lastScrollTime < _scrollDebounceInterval) {
+      return;  // 如果距离上次滚动时间小于阈值，则不进行滚动
+    }
+
+    // 更新最后一次滚动时间
+    _lastScrollTime = currentTime;
+
+    final notBottom = position.pixels < position.maxScrollExtent;
+    final notTop = position.pixels > 0;
+
+    // 根据位置调整滚动距离，避免一次滚动距离过大
+    final remainingScrollDown = position.maxScrollExtent - position.pixels;
+    final remainingScrollUp = position.pixels;
+
+    // 计算滚动距离，避免滚动超出边界
+    final actualScrollDown = remainingScrollDown < scrollThreshold ? remainingScrollDown : scrollThreshold;
+    final actualScrollUp = remainingScrollUp < scrollThreshold ? remainingScrollUp : scrollThreshold;
+
+    final shouldScrollDown = details.localPosition.dy > renderTerminal.size.height - scrollThreshold;
+    final shouldScrollUp = details.localPosition.dy < scrollThreshold;
+
+    // 向下滚动
+    if (shouldScrollDown && notBottom) {
+      final targetPosition = position.pixels + actualScrollDown;
+      position.animateTo(
+        targetPosition,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
+    }
+
+    // 向上滚动
+    if (shouldScrollUp && notTop) {
+      final targetPosition = position.pixels - actualScrollUp;
+      position.animateTo(
+        targetPosition,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
 }
 
 class _TerminalView extends LeafRenderObjectWidget {
