@@ -169,7 +169,6 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
   }
 
   void onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
-    print('11111');
     renderTerminal.selectWord(
       _lastLongPressStartDetails!.localPosition,
       details.localPosition,

@@ -48,6 +48,7 @@ class TerminalView extends StatefulWidget {
     this.readOnly = false,
     this.hardwareKeyboardOnly = false,
     this.simulateScroll = true,
+    this.onTextInputRect,
   });
 
   /// The underlying terminal that this widget renders.
@@ -93,6 +94,9 @@ class TerminalView extends StatefulWidget {
 
   /// Function called when the user stops holding down a secondary button.
   final void Function(TapUpDetails, CellOffset)? onSecondaryTapUp;
+
+  /// 当终端键入时返回坐标
+  final void Function(String text,Rect cursorRect,Rect globalCursorRect)? onTextInputRect;
 
   /// The mouse cursor for mouse pointers that are hovering over the terminal.
   /// [SystemMouseCursors.text] by default.
@@ -368,6 +372,7 @@ class TerminalViewState extends State<TerminalView> {
   }
 
   void _onInsert(String text) {
+    widget.onTextInputRect?.call(text,cursorRect,globalCursorRect);
     final key = charToTerminalKey(text.trim());
 
     // On mobile platforms there is no guarantee that virtual keyboard will
