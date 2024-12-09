@@ -110,6 +110,14 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
     markNeedsPaint();
   }
 
+  String? get selectedText {
+    final selection = _controller.selection;
+    if (selection == null) {
+      return null;
+    }
+    return _terminal.buffer.getText(selection);
+  }
+
   FocusNode _focusNode;
   set focusNode(FocusNode value) {
     if (value == _focusNode) return;

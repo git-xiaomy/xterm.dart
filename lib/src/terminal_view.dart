@@ -48,7 +48,7 @@ class TerminalView extends StatefulWidget {
     this.readOnly = false,
     this.hardwareKeyboardOnly = false,
     this.simulateScroll = true,
-    this.onTextInputRect,
+    this.onTextInputRect, this.onSelectDown,
   });
 
   /// The underlying terminal that this widget renders.
@@ -97,6 +97,9 @@ class TerminalView extends StatefulWidget {
 
   /// 当终端键入时返回坐标
   final void Function(String text,Rect cursorRect,Rect globalCursorRect)? onTextInputRect;
+
+  /// 当终端选择结束后返回文本
+  final void Function(String text)? onSelectDown;
 
   /// The mouse cursor for mouse pointers that are hovering over the terminal.
   /// [SystemMouseCursors.text] by default.
@@ -304,6 +307,7 @@ class TerminalViewState extends State<TerminalView> {
       terminalController: _controller,
       onTapUp: _onTapUp,
       onTapDown: _onTapDown,
+      onSelectDown: widget.onSelectDown,
       onSecondaryTapDown: widget.onSecondaryTapDown != null ? _onSecondaryTapDown : null,
       onSecondaryTapUp: widget.onSecondaryTapUp != null ? _onSecondaryTapUp : null,
       readOnly: widget.readOnly,

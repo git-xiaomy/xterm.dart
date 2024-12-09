@@ -23,8 +23,10 @@ class TerminalGestureHandler extends StatefulWidget {
     this.onSecondaryTapUp,
     this.onTertiaryTapDown,
     this.onTertiaryTapUp,
-    this.readOnly = false,
+    this.readOnly = false, this.onSelectDown,
   });
+
+  final void Function(String text)? onSelectDown;
 
   final TerminalViewState terminalView;
 
@@ -206,7 +208,12 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
     terminalView.autoScrollDown(details);
   }
 
+
   void onDragEnd(DragEndDetails details) {
+    final selected = renderTerminal.selectedText;
+    if(selected!=null){
+      widget.onSelectDown?.call(selected);
+    }
     // 清空选区状态
     _selectedRange = null;
   }
