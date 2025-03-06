@@ -321,6 +321,7 @@ class TerminalViewState extends State<TerminalView> {
 
     child = Container(
       color: widget.theme.background.withOpacity(widget.backgroundOpacity),
+      // color: widget.theme.background,
       padding: widget.padding,
       child: child,
     );
