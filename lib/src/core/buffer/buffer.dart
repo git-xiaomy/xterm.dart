@@ -172,6 +172,7 @@ class Buffer {
 
   /// Erases the whole viewport.
   void eraseDisplay() {
+    clear();
     for (var i = 0; i < viewHeight; i++) {
       final line = lines[i + scrollBack];
       line.isWrapped = false;
@@ -377,6 +378,9 @@ class Buffer {
     for (int i = 0; i < viewHeight; i++) {
       lines.push(_newEmptyLine());
     }
+    // 重置选区相关状态
+    _cursorX = 0;
+    _cursorY = 0;
   }
 
   void insertBlankChars(int count) {
@@ -483,7 +487,13 @@ class Buffer {
 
   /// Create a new [CellAnchor] at the specified [x] and [y] coordinates.
   CellAnchor createAnchorFromOffset(CellOffset offset) {
-    return lines[offset.y].createAnchor(offset.x);
+    if (lines.length==0) {
+      return _newEmptyLine().createAnchor(0);
+    }
+
+    final safeY = offset.y.clamp(0, height - 1);
+    final safeX = offset.x.clamp(0, viewWidth - 1);
+    return lines[safeY].createAnchor(safeX);
   }
 
   CellAnchor createAnchorFromCursor() {

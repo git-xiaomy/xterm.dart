@@ -253,12 +253,16 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
   CellOffset getCellOffset(Offset offset) {
     final x = offset.dx - _padding.left;
     final y = offset.dy - _padding.top + _scrollOffset;
-    final row = y ~/ _painter.cellSize.height;
-    final col = x ~/ _painter.cellSize.width;
-    return CellOffset(
-      col.clamp(0, _terminal.viewWidth - 1),
-      row.clamp(0, _terminal.buffer.lines.length - 1),
-    );
+
+    // 添加缓冲区行数保护
+    final maxRow = max(_terminal.buffer.lines.length - 1, 0);
+    final row = (y ~/ _painter.cellSize.height).clamp(0, maxRow);
+
+    // 添加列数保护
+    final maxCol = max(_terminal.buffer.viewWidth - 1, 0);
+    final col = (x ~/ _painter.cellSize.width).clamp(0, maxCol);
+
+    return CellOffset(col, row);
   }
 
   /// Selects entire words in the terminal that contains [from] and [to].
@@ -288,20 +292,38 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
   /// Selects characters in the terminal that starts from [from] to [to]. At
   /// least one cell is selected even if [from] and [to] are same.
   void selectCharacters(CellOffset from, [CellOffset? to]) {
-    if (to == null) {
-      _controller.setSelection(
-        _terminal.buffer.createAnchorFromOffset(from),
-        _terminal.buffer.createAnchorFromOffset(from),
-      );
-    } else {
-      if (to.x >= from.x) {
-        to = CellOffset(to.x + 1, to.y);
-      }
-      _controller.setSelection(
-        _terminal.buffer.createAnchorFromOffset(from),
-        _terminal.buffer.createAnchorFromOffset(to),
-      );
+    // 添加缓冲区状态检查
+    if (_terminal.buffer.height == 0) {
+      _controller.clearSelection();
+      return;
     }
+
+    // 规范化坐标
+    final normalizedFrom = CellOffset(
+      from.x.clamp(0, _terminal.buffer.viewWidth - 1),
+      from.y.clamp(0, _terminal.buffer.height - 1),
+    );
+
+    // 处理 to 为 null 的情况
+    final normalizedTo = to != null ? CellOffset(
+      to.x.clamp(0, _terminal.buffer.viewWidth - 1),
+      to.y.clamp(0, _terminal.buffer.height - 1),
+    ) : normalizedFrom; // 使用 from 作为 to
+
+    // 调整选区结束位置时增加保护
+    final adjustedX = normalizedTo.x >= normalizedFrom.x
+        ? (normalizedTo.x + 1).clamp(0, _terminal.buffer.viewWidth)
+        : normalizedTo.x;
+
+    final endAnchor = CellOffset(
+        adjustedX,
+        normalizedTo.y.clamp(0, _terminal.buffer.height - 1)
+    );
+
+    _controller.setSelection(
+      _terminal.buffer.createAnchorFromOffset(normalizedFrom),
+      _terminal.buffer.createAnchorFromOffset(endAnchor),
+    );
   }
 
   /// Send a mouse event at [offset] with [button] being currently in [buttonState].
