@@ -177,7 +177,8 @@ class TerminalViewState extends State<TerminalView> {
     _controller = widget.controller ?? TerminalController();
     _scrollController = widget.scrollController ?? ScrollController();
     _shortcutManager = ShortcutManager(
-      shortcuts: widget.shortcuts ?? defaultTerminalShortcuts,
+      // shortcuts: widget.shortcuts ?? defaultTerminalShortcuts,
+      shortcuts: widget.shortcuts ?? <LogicalKeySet, Intent>{},
     );
     super.initState();
   }
