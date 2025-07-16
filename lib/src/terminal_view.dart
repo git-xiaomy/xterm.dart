@@ -351,6 +351,15 @@ class TerminalViewState extends State<TerminalView> {
     widget.onTapUp?.call(details, offset);
   }
 
+  void setFont(TerminalStyle ts){
+    setState(() {
+      renderTerminal.textStyle = ts;
+      print('执行了: ${ts.fontSize}');
+    });
+
+  }
+
+
   void _onTapDown(_) {
     if (_controller.selection != null) {
       _controller.clearSelection();
