@@ -23,7 +23,7 @@ class TerminalGestureHandler extends StatefulWidget {
     this.onSecondaryTapUp,
     this.onTertiaryTapDown,
     this.onTertiaryTapUp,
-    this.readOnly = false, this.onSelectDown,
+    this.readOnly = false, this.onSelectDown, this.onLongPressStartExternal, this.onLongPressMoveUpdateExternal, this.onLongPressEndExternal,
   });
 
   final void Function(String text)? onSelectDown;
@@ -47,6 +47,11 @@ class TerminalGestureHandler extends StatefulWidget {
   final GestureTapDownCallback? onTertiaryTapDown;
 
   final GestureTapUpCallback? onTertiaryTapUp;
+
+  final void Function(LongPressStartDetails details)? onLongPressStartExternal;
+  final void Function(LongPressMoveUpdateDetails details)? onLongPressMoveUpdateExternal;
+  final void Function(LongPressEndDetails details)? onLongPressEndExternal;
+
 
   final bool readOnly;
 
@@ -76,7 +81,7 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
       onTertiaryTapUp: onSecondaryTapUp,
       onLongPressStart: onLongPressStart,
       onLongPressMoveUpdate: onLongPressMoveUpdate,
-      // onLongPressUp: onLongPressUp,
+      onLongPressEnd: onLongPressEnd,
       onDragStart: onDragStart,
       onDragUpdate: onDragUpdate,
       onDoubleTapDown: onDoubleTapDown,
@@ -168,6 +173,7 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
   void onLongPressStart(LongPressStartDetails details) {
     _lastLongPressStartDetails = details;
     renderTerminal.selectWord(details.localPosition);
+    widget.onLongPressStartExternal?.call(details);
   }
 
   void onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
@@ -175,9 +181,12 @@ class _TerminalGestureHandlerState extends State<TerminalGestureHandler> {
       _lastLongPressStartDetails!.localPosition,
       details.localPosition,
     );
+    widget.onLongPressMoveUpdateExternal?.call(details);
   }
 
-  // void onLongPressUp() {}
+  void onLongPressEnd(LongPressEndDetails details) {
+    widget.onLongPressEndExternal?.call(details);
+  }
 
   BufferRangeLine? _selectedRange;
   late CellOffset _initialCellOffset;

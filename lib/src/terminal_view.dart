@@ -48,7 +48,7 @@ class TerminalView extends StatefulWidget {
     this.readOnly = false,
     this.hardwareKeyboardOnly = false,
     this.simulateScroll = true,
-    this.onTextInputRect, this.onSelectDown,
+    this.onTextInputRect, this.onSelectDown, this.onLongPressStartExternal, this.onLongPressMoveUpdateExternal, this.onLongPressEndExternal,
   });
 
   /// The underlying terminal that this widget renders.
@@ -100,6 +100,13 @@ class TerminalView extends StatefulWidget {
 
   /// 当终端选择结束后返回文本
   final void Function(String text)? onSelectDown;
+
+  // 当手指长按、拖动时的回调
+  final void Function(LongPressStartDetails details)? onLongPressStartExternal;
+  final void Function(LongPressMoveUpdateDetails details)? onLongPressMoveUpdateExternal;
+  final void Function(LongPressEndDetails details)? onLongPressEndExternal;
+
+
 
   /// The mouse cursor for mouse pointers that are hovering over the terminal.
   /// [SystemMouseCursors.text] by default.
@@ -311,6 +318,11 @@ class TerminalViewState extends State<TerminalView> {
       onSelectDown: widget.onSelectDown,
       onSecondaryTapDown: widget.onSecondaryTapDown != null ? _onSecondaryTapDown : null,
       onSecondaryTapUp: widget.onSecondaryTapUp != null ? _onSecondaryTapUp : null,
+      // onSecondaryTapDown: _onSecondaryTapDown,
+      // onSecondaryTapUp:  _onSecondaryTapUp,
+      onLongPressStartExternal: widget.onLongPressStartExternal,
+      onLongPressMoveUpdateExternal: widget.onLongPressMoveUpdateExternal,
+      onLongPressEndExternal: widget.onLongPressEndExternal,
       readOnly: widget.readOnly,
       child: child,
     );
@@ -347,6 +359,7 @@ class TerminalViewState extends State<TerminalView> {
   }
 
   void _onTapUp(TapUpDetails details) {
+    print('_onTapUp111111111');
     final offset = renderTerminal.getCellOffset(details.localPosition);
     widget.onTapUp?.call(details, offset);
   }
@@ -373,11 +386,13 @@ class TerminalViewState extends State<TerminalView> {
   }
 
   void _onSecondaryTapDown(TapDownDetails details) {
+    print('拖动中111');
     final offset = renderTerminal.getCellOffset(details.localPosition);
     widget.onSecondaryTapDown?.call(details, offset);
   }
 
   void _onSecondaryTapUp(TapUpDetails details) {
+    print('拖动中');
     final offset = renderTerminal.getCellOffset(details.localPosition);
     widget.onSecondaryTapUp?.call(details, offset);
   }
@@ -457,6 +472,9 @@ class TerminalViewState extends State<TerminalView> {
   void _onEditableRect(Rect rect, Rect caretRect) {
     _customTextEditKey.currentState?.setEditableRect(rect, caretRect);
   }
+
+
+
 
   void _scrollToBottom() {
     final position = _scrollableKey.currentState?.position;
